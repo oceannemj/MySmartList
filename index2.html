@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Smart List</title>
+    <link rel="apple-touch-icon" href="icons/icon.png">
+    <meta name="theme-color" content="#0d6efd">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+       body {
+    font-family: 'Roboto', sans-serif;
+    padding: 20px;
+    background-color: #f4f4f9;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.note-container {
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    margin-top: 20px;
+}
+
+h1 {
+    font-weight: 700;
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.nav {
+    margin-top: 20px;
+}
+
+.btn-link {
+    font-size: 1.2rem;
+    color: #007bff;
+    transition: color 0.3s;
+}
+
+.btn-link:hover {
+    color: #0056b3;
+    text-decoration: underline; /* Add underline on hover */
+}
+
+.form-group {
+    margin-bottom: 1.5rem; /* Reduced spacing for a tighter layout */
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #ccc; /* Subtle border */
+    transition: border-color 0.3s;
+}
+
+.form-control:focus {
+    border-color: #007bff; /* Highlight border on focus */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Add glow effect */
+}
+
+.total-under {
+    color: green;
+    font-weight: bold; /* Make the text bold */
+}
+
+.total-over {
+    color: red;
+    font-weight: bold; /* Make the text bold */
+    animation: vibrate 0.3s linear infinite;
+}
+
+@keyframes vibrate {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-2px); }
+    75% { transform: translateX(2px); }
+    100% { transform: translateX(0); }
+}
+
+.card {
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px; /* Add space between cards */
+}
+
+.card-header {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    font-size: 1.25rem; /* Larger font for headers */
+    border-top-left-radius: 15px; /* Rounded top corners */
+    border-top-right-radius: 15px; /* Rounded top corners */
+}
+
+.card-body {
+    background-color: #fafafa;
+}
+
+.list-group-item {
+    background-color: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    transition: background-color 0.3s; /* Smooth background change */
+}
+
+.list-group-item:hover {
+    background-color: #e0e0e0; /* Darken background on hover */
+}
+
+.btn-primary {
+    border-radius: 8px;
+    background-color: #007bff;
+    transition: background-color 0.3s, transform 0.2s; /* Add transform for animation */
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    transform: scale(1.05); /* Slightly enlarge button on hover */
+}
+
+.btn-secondary {
+    border-radius: 8px;
+    background-color: #6c757d;
+    transition: background-color 0.3s, transform 0.2s; /* Add transform for animation */
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    transform: scale(1.05); /* Slightly enlarge button on hover */
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+    </style>
+</head>
+
+<body>
+    <div class="container note-container">
+        <h1 class="text-center mb-4">My Smart List <i class="fas fa-list"></i></h1>
+        <nav class="nav justify-content-center mb-4">
+            <button id="goToBudget" class="btn btn-link"><i class="fas fa-plus-circle"></i> Nouvelle liste</button>
+            <button id="goToList" class="btn btn-link"><i class="fas fa-file-alt"></i> Mes listes</button>
+            <button id="goToSettings" class="btn btn-link"><i class="fas fa-cog"></i> Paramètres</button>
+        </nav>
+
+        <div id="budgetPage" class="d-none card">
+            <div class="card-header">Entrer le Budget</div>
+            <div class="card-body">
+                <div class="form-group">
+                    <input type="number" id="budget" class="form-control" placeholder="Entrez votre budget" required>
+                </div>
+                <button id="setBudget" class="btn btn-primary"><i class="fas fa-check"></i> Valider Budget</button>
+            </div>
+        </div>
+
+        <div id="menuPage" class="d-none card">
+            <div class="card-header">Titre du Menu du Jour</div>
+            <div class="card-body">
+                <div class="form-group">
+                    <input type="text" id="menuTitle" class="form-control" placeholder="Titre du Menu" required>
+                </div>
+                <button id="setMenuTitle" class="btn btn-primary"><i class="fas fa-check"></i> Valider Titre</button>
+            </div>
+        </div>
+
+        <div id="listPage" class="d-none card">
+            <div class="card-header">Menu : <span id="displayMenuTitle"></span></div>
+            <div class="card-body">
+                <h4>Ingrédients</h4>
+                <form id="productForm">
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="productName" placeholder="Nom du produit" required>
+                    </div>
+                    <div class="form-group">
+                        <select class="form-control" id="unitemesure">
+                            <option value="unitemesure">Unité de Mesure</option>
+                            <option value="Kilogrammes">Kilogrammes</option>
+                            <option value="Litres">Litres</option>
+                            <option value="Sacs">Sacs</option>
+                            <option value="Boites">Boîtes</option>
+                            <option value="Paquets">Paquets</option>
+                            <option value="Bouteilles">Bouteilles</option>
+                            <option value="Cartons">Cartons</option>
+                            <option value="Flacons">Flacons</option>
+                            <option value="Pots">Pots</option>
+                            <option value="Autres">Autres</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input type="number" class="form-control" id="productPrice" placeholder="Prix" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="number" class="form-control" id="productQuantity" placeholder="Quantité" required>
+                    </div>
+                    <div class="form-group">
+                        <select class="form-control" id="productCategory">
+                            <option value="Categories">Catégories</option>
+                            <option value="Epices">Épices</option>
+                            <option value="Boisson">Boissons</option>
+                            <option value="Protides">Protides</option>
+                            <option value="Glucides">Glucides</option>
+                            <option value="Lipides">Lipides</option>
+                            <option value="Fruits">Fruits</option>
+                            <option value="Legumes">Légumes</option>
+                            <option value="Autres">Autres</option>
+                        </select>
+                    </div>
+                    <button type="submit"  id= "ajouter" class="btn btn-primary"><i class="fas fa-plus"></i> Ajouter Produit</button>
+                    <button type="button" id="finishList" class="btn btn-secondary"><i class="fas fa-clipboard-check"></i> Terminer Liste</button>
+                </form>
+
+                <div class="modal fade" id="budgetAlertModal" tabindex="-1" role="dialog" aria-labelledby="budgetAlertLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="budgetAlertLabel">Dépassement de Budget</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Votre total dépasse le budget ! Que souhaitez-vous faire ?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="continueButton">Continuer</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="modifyBudgetButton">Modifier le Budget</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="budgetAlertModal" tabindex="-1" role="dialog" aria-labelledby="budgetAlertLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="budgetAlertLabel">Dépassement de Budget</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Votre total dépasse le budget ! Que souhaitez-vous faire ?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="continueButton">Continuer</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" id="modifyBudgetButton">Modifier le Budget</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+                <h3 class="mt-4">Produits</h3>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Catégorie</th>
+            <th>Unité de Mesure</th>
+            <th>Prix </th>
+            <th>Quantité</th>
+            <th>Total </th>
+            <th>Actions</th> <!-- Nouvelle colonne pour les actions -->
+        </tr>
+    </thead>
+    <tbody id="productList"></tbody>
+</table>
+
+<h4 class="mt-4">Total: <span id="totalPrice">0.00</span> </h4>
+<h4 class="mt-4">Budget Restant: <span id="remainingBudget">0.00</span> </h4>
+<button id="downloadPDF" class="btn btn-success mt-2"><i class="fas fa-file-pdf"></i> Télécharger PDF</button>
+<button id="shareWhatsApp" class="btn btn-info mt-2"><i class="fab fa-whatsapp"></i> Partager sur WhatsApp</button>
+
+            </div>
+        </div>
+
+        <div id="listsPage" class="d-none card">
+            <div class="card-header">Listes Créées</div>
+            <div class="card-body">
+                <ul id="lists" class="list-group"></ul>
+            </div>
+        </div>
+
+        <!-- Modal pour voir / modifier une liste -->
+<div class="modal fade" id="listModal" tabindex="-1" aria-labelledby="listModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="listModalLabel">Modifier</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body" id="listModalBody">
+                <!-- Contenu injecté dynamiquement ici (via JavaScript) -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="saveModifiedList()">Sauvegarder</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+        <div id="settingsPage" class="d-none card">
+            <div class="card-header">Paramètres</div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="defaultBudget">Budget par défaut :</label>
+                    <input type="number" id="defaultBudget" class="form-control" placeholder="Définir un montant">
+                </div>
+                <div class="form-group">
+                    <label for="notifications">Activer les notifications :</label>
+                    <select id="notifications" class="form-control">
+                        <option value="true">Activées</option>
+                        <option value="false">Désactivées</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="theme">Choisir le thème :</label>
+                    <select id="theme" class="form-control">
+                        <option value="light">Clair <i class="fas fa-sun"></i></option>
+                        <option value="dark">Sombre <i class="fas fa-moon"></i></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="sortOrder">Trier par :</label>
+                    <select id="sortOrder" class="form-control">
+                        <option value="name">Nom</option>
+                        <option value="price">Prix</option>
+                    </select>
+                </div>
+               
+                <button id="saveSettings" class="btn btn-primary"><i class="fas fa-save"></i> Sauvegarder les modifications </button>
+                <button id="resetSettings" class="btn btn-warning"><i class="fas fa-undo"></i> Réinitialiser les paramètres</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+        
+        let products = [];
+        let budget = 0;
+        let notificationsEnabled = true;
+        let savedLists = JSON.parse(localStorage.getItem('savedLists')) || [];
+        const categories = ["glucides", "protides", "lipides", "Épices","legumes","fruits","boissons", "Autre"];
+        const unitesMesure = ["carton","sacs","boite","bouteille","flacons", "kilogramme", "Litre", "paquet","autres"];
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+             navigator.serviceWorker.register('service-worker.js')
+            .then(reg => console.log("✅ Service Worker enregistré", reg))
+            .catch(err => console.error("❌ Erreur Service Worker", err));
+         });
+        }
+
+
+        
+        const saveListsToStorage = () => localStorage.setItem('savedLists', JSON.stringify(savedLists));
+        
+        const switchPage = (pageIdToShow) => {
+            ['budgetPage', 'listPage', 'listsPage', 'settingsPage', 'menuPage'].forEach(pageId =>
+                document.getElementById(pageId).classList.toggle('d-none', pageId !== pageIdToShow)
+            );
+        };
+        
+        const applyTheme = (theme) => {
+            document.body.classList.toggle("bg-dark", theme === "dark");
+            document.body.classList.toggle("text-white", theme === "dark");
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.classList.toggle('btn-outline-dark', theme !== "dark");
+                btn.classList.toggle('btn-outline-light', theme === "dark");
+            });
+        };
+        
+        const calculateTotal = () => {
+            const total = products.reduce((sum, p) => sum + p.price * p.quantity, 0);
+            const remaining = budget - total;
+            const elTotal = document.getElementById('totalPrice');
+            elTotal.textContent = total.toFixed(2);
+            document.getElementById('remainingBudget').textContent = remaining.toFixed(2);
+            elTotal.classList.toggle('total-under', remaining >= 0);
+            elTotal.classList.toggle('total-over', remaining < 0);
+        
+            if (remaining < 0 && navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+                if (!confirm("⚠️ Votre total dépasse le budget !\n\nContinuer ?")) {
+                    alert("Vous pouvez modifier votre liste ou ajuster votre budget.");
+                }
+            }
+        };
+        
+        const updateProductList = () => {
+            const list = document.getElementById('productList');
+            const sortOrder = document.getElementById('sortOrder')?.value || 'name';
+            list.innerHTML = '';
+        
+            products.sort((a, b) => sortOrder === 'price' ? a.price - b.price : a.name.localeCompare(b.name));
+        
+            products.forEach((p, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${p.name}</td>
+                    <td>${p.category}</td>
+                    <td>${p.unitemesure}</td>
+                    <td>${p.price.toFixed(2)}</td>
+                    <td>${p.quantity}</td>
+                    <td>${(p.price * p.quantity).toFixed(2)}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="removeProduct(${index})"><i class="fas fa-trash"></i> Supprimer</button></td>
+                `;
+                list.appendChild(row);
+            });
+        };
+        
+        const updateListsPage = () => {
+            const listsContainer = document.getElementById('lists');
+            listsContainer.innerHTML = '';
+        
+            savedLists.forEach((list, index) => {
+                const item = document.createElement('li');
+                item.className = 'list-group-item';
+                item.innerHTML = `
+                    <strong>${list.title}</strong> - <em>${list.dateCreated}</em>
+                    ${["Voir", "Copier", "Télécharger", "Supprimer"].map((action, i) => {
+                        const icons = ["eye", "copy", "file-pdf", "trash"];
+                        const funcs = ["openModalViewList", "copyList", "downloadList", "deleteList"];
+                        const colors = ["info", , "success", "danger", "danger"];
+                        return `<button class="btn btn-${colors[i]} btn-sm float-right mx-2" onclick="${funcs[i]}(${index})"><i class="fas fa-${icons[i]}"></i> ${action}</button>`;
+                    }).join('')}
+                `;
+                listsContainer.appendChild(item);
+            });
+        };
+
+        
+        const openModalViewList = (index) => {
+    const list = savedLists[index];
+
+    let html = `
+        <div class="mb-3">
+            <label><strong>Titre :</strong></label>
+            <input class="form-control" id="editTitle" value="${list.title}" />
+        </div>
+        <div class="mb-3">
+            <label><strong>Budget :</strong></label>
+            <input type="number" class="form-control" id="editBudget" value="${list.budget || 0}" min="0" onchange="savedLists[${index}].budget=parseFloat(this.value)" />
+        </div>
+        <div class="mb-4">
+  <div class="row justify-content-end g-2">
+    <div class="col-auto">
+      <div class="bg-white border rounded-3 shadow-sm p-3 d-flex align-items-center gap-2">
+        <i class="bi bi-cash-coin text-success fs-5"></i>
+        <div>
+          <div class="text-muted small">Total dépensé</div>
+          <div class="fw-bold fs-5 text-dark">
+            <span id="totalDepense">0.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-auto">
+      <div class="bg-white border rounded-3 shadow-sm p-3 d-flex align-items-center gap-2">
+        <i class="bi bi-wallet2 text-primary fs-5"></i>
+        <div>
+          <div class="text-muted small">Reste</div>
+          <div class="fw-bold fs-5 text-dark">
+            <span id="resteBudget">0.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Produit</th>
+                        <th>Catégorie</th>
+                        <th>Unité</th>
+                        <th>Prix </th>
+                        <th>Quantité</th>
+                        <th>Total </th>
+                    </tr>
+                </thead>
+                <tbody id="productRows">
+    ${list.products.map((p, i) => 
+        `<tr>
+            <td><input class="form-control" value="${p.name}" onchange="savedLists[${index}].products[${i}].name=this.value; refreshBudgetInfo(${index})" /></td>
+            
+            <td>
+                <select class="form-select" onchange="savedLists[${index}].products[${i}].category=this.value">
+                    ${categories.map(cat => `<option value="${cat}" ${p.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+                </select>
+            </td>
+
+            <td>
+                <select class="form-select" onchange="savedLists[${index}].products[${i}].unitemesure=this.value">
+                    ${unitesMesure.map(unit => `<option value="${unit}" ${p.unitemesure === unit ? 'selected' : ''}>${unit}</option>`).join('')}
+                </select>
+            </td>
+
+            <td><input type="number" class="form-control" value="${p.price}" min="0" onchange="savedLists[${index}].products[${i}].price=parseFloat(this.value); refreshBudgetInfo(${index})" /></td>
+            <td><input type="number" class="form-control" value="${p.quantity}" min="1" onchange="savedLists[${index}].products[${i}].quantity=parseInt(this.value); refreshBudgetInfo(${index})" /></td>
+            <td class="text-end fw-bold">${(p.price * p.quantity).toFixed(2)}</td>
+        </tr>`).join('')}
+</tbody>
+
+            </table>
+            <button class="btn btn-outline-primary mt-2" onclick="addNewProduct(${index})">➕ Ajouter un produit</button>
+        </div>
+    `;
+
+    document.getElementById('listModalBody').innerHTML = html;
+    document.getElementById('listModalLabel').textContent = `Voir / Modifier : ${list.title}`;
+    refreshBudgetInfo(index);
+    new bootstrap.Modal(document.getElementById('listModal')).show();
+};
+
+
+const addNewProduct = (index) => {
+    const newProduct = { name: "", category: "", unitemesure: "", price: 0, quantity: 1 };
+    savedLists[index].products.push(newProduct);
+    openModalViewList(index); // recharge la modale
+};
+
+
+const refreshBudgetInfo = (index) => {
+    const list = savedLists[index];
+    const total = list.products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
+    const budget = list.budget || 0;
+    const reste = (budget - total).toFixed(2);
+
+    document.getElementById('totalDepense').textContent = total.toFixed(2);
+    document.getElementById('resteBudget').textContent = reste;
+};
+
+const saveModifiedList = () => {
+    const titleInput = document.getElementById('editTitle');
+    const budgetInput = document.getElementById('editBudget');
+    const newTitle = titleInput.value.trim();
+    const newBudget = parseFloat(budgetInput.value);
+
+    if (!newTitle) return alert("Le titre est requis.");
+
+    const oldTitle = document.getElementById('listModalLabel').textContent.replace("Voir / Modifier : ", "");
+    const index = savedLists.findIndex(l => l.title === oldTitle);
+    if (index === -1) return alert("Erreur : Liste introuvable.");
+
+    savedLists[index].title = newTitle;
+    savedLists[index].budget = newBudget;
+    saveListsToStorage();
+    updateListsPage();
+    alert("Modifications enregistrées.");
+    bootstrap.Modal.getInstance(document.getElementById('listModal')).hide();
+};
+
+        
+        const copyList = (index) => {
+            const list = savedLists[index];
+            savedLists.push({
+                title: `${list.title} - Copie`,
+                dateCreated: new Date().toLocaleString(),
+                products: [...list.products]
+            });
+            saveListsToStorage();
+            updateListsPage();
+            alert("Liste copiée !");
+        };
+        
+        const deleteList = (index) => {
+            if (confirm("Supprimer cette liste ?")) {
+                savedLists.splice(index, 1);
+                saveListsToStorage();
+                updateListsPage();
+            }
+        };
+        
+        const removeProduct = (index) => {
+            products.splice(index, 1);
+            updateProductList();
+            calculateTotal();
+        };
+        
+        const addProduct = (event) => {
+            event.preventDefault();
+        
+            const name = document.getElementById('productName').value.trim();
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const quantity = parseInt(document.getElementById('productQuantity').value);
+            const category = document.getElementById('productCategory').value.trim();
+            const unitemesure = document.getElementById('unitemesure').value.trim();
+        
+            if (!name || isNaN(price) || price <= 0 || isNaN(quantity) || quantity <= 0 || !unitemesure)
+                return alert("Veuillez entrer des informations valides pour le produit.");
+        
+            const newProduct = { name, price, quantity, category, unitemesure };
+            const projectedTotal = products.reduce((sum, p) => sum + p.price * p.quantity, 0) + price * quantity;
+        
+            if (projectedTotal > budget) {
+                $('#budgetAlertModal').modal('show');
+                document.getElementById('continueButton').onclick = () => {
+                    products.push(newProduct);
+                    afterProductAdded();
+                    $('#budgetAlertModal').modal('hide');
+                };
+                return;
+            }
+        
+            products.push(newProduct);
+            afterProductAdded();
+        
+            fetch('http://localhost:3000/api/produits', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nom: name,
+                    prix: price,
+                    quantite: quantity,
+                    categorie: category,
+                    unite_de_mesure: unitemesure
+                })
+            }).catch(console.error);
+        };
+        
+        const afterProductAdded = () => {
+            document.getElementById('productForm').reset();
+            updateProductList();
+            calculateTotal();
+        };
+        
+        const downloadList = (index) => {
+            const list = savedLists[index];
+            const doc = new jsPDF();
+            doc.text(`Liste de Courses: ${list.title}`, 10, 10);
+            list.products.forEach((p, i) =>
+                doc.text(`${p.name} (${p.category}) - ${p.price.toFixed(2)} x ${p.quantity} ${p.unitemesure} = ${(p.price * p.quantity).toFixed(2)} `, 10, 20 + i * 10)
+            );
+            doc.text(`Total: ${list.products.reduce((sum, p) => sum + p.price * p.quantity, 0).toFixed(2)} `, 10, 30 + 10 * list.products.length);
+            doc.save(`${list.title}.pdf`);
+        };
+        
+        const downloadListFromProducts = () => {
+            const doc = new jsPDF();
+            const title = document.getElementById('displayMenuTitle').textContent;
+            doc.text(`Liste de Courses: ${title}`, 10, 10);
+            products.forEach((p, i) =>
+                doc.text(`${p.name} (${p.category}) - ${p.price.toFixed(2)}  x ${p.quantity} ${p.unitemesure} = ${(p.price * p.quantity).toFixed(2)} `, 10, 20 + i * 10)
+            );
+            const total = products.reduce((sum, p) => sum + p.price * p.quantity, 0).toFixed(2);
+            doc.text(`Total: ${total} €`, 10, 30 + 10 * products.length);
+            doc.save(`${title}.pdf`);
+        };
+        
+        // INIT
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service_worker.js').then(() =>
+                console.log('Service Worker enregistré')
+            );
+        }
+        
+        document.addEventListener('DOMContentLoaded', updateListsPage);
+        document.getElementById('productForm').addEventListener('submit', addProduct);
+        
+        // NAVIGATION
+        document.getElementById('modifyBudgetButton').onclick =
+        document.getElementById('goToBudget').onclick = () => switchPage('budgetPage');
+        document.getElementById('goToList').onclick = () => switchPage('listsPage');
+        document.getElementById('goToSettings').onclick = () => switchPage('settingsPage');
+        
+        // PARAMÈTRES
+        document.getElementById('setBudget').onclick = () => {
+            const newBudget = parseFloat(document.getElementById('budget').value);
+            if (isNaN(newBudget) || newBudget <= 0) return alert("Veuillez entrer un montant valide.");
+            budget = newBudget;
+            document.getElementById('remainingBudget').textContent = budget.toFixed(2);
+            switchPage('menuPage');
+        };
+        
+        document.getElementById('setMenuTitle').onclick = () => {
+            const title = document.getElementById('menuTitle').value.trim();
+            if (!title) return alert("Veuillez entrer un titre pour le menu.");
+            document.getElementById('displayMenuTitle').textContent = title;
+            switchPage('listPage');
+        };
+        
+        document.getElementById('finishList').onclick = () => {
+            if (products.length === 0) return alert("Aucun produit à enregistrer !");
+            savedLists.push({
+                title: document.getElementById('displayMenuTitle').textContent,
+                dateCreated: new Date().toLocaleString(),
+                products: [...products]
+            });
+            saveListsToStorage();
+            updateListsPage();
+            products.length = 0;
+            updateProductList();
+            budget = 0;
+            document.getElementById('totalPrice').textContent = '0.00';
+            document.getElementById('remainingBudget').textContent = '0.00';
+            alert("Liste terminée !");
+        };
+        
+        document.getElementById('downloadPDF').onclick = downloadListFromProducts;
+        
+        document.getElementById('saveSettings').onclick = () => {
+            const defaultBudget = parseFloat(document.getElementById('defaultBudget').value);
+            if (!isNaN(defaultBudget)) {
+                budget = defaultBudget;
+                document.getElementById('remainingBudget').textContent = budget.toFixed(2);
+                document.getElementById('budget').value = budget;
+                alert(`Budget défini à ${budget} `);
+            }
+            notificationsEnabled = document.getElementById('notifications').value === "true";
+            applyTheme(document.getElementById('theme').value);
+            alert("Paramètres sauvegardés !");
+        };
+        
+        document.getElementById('resetSettings').onclick = () => {
+            document.getElementById('defaultBudget').value = '';
+            document.getElementById('notifications').value = 'true';
+            document.getElementById('theme').value = 'light';
+            document.body.className = "";
+            alert("Paramètres réinitialisés.");
+        };
+        
+        document.getElementById('clearAllLists').onclick = () => {
+            const check = document.getElementById('clearAllCheckbox');
+            if (check.checked) {
+                savedLists.length = 0;
+                saveListsToStorage();
+                updateListsPage();
+                alert("Toutes les listes ont été supprimées !");
+                check.checked = false;
+            } else {
+                alert("Veuillez cocher la case pour confirmer.");
+            }
+        };
+        
+        document.getElementById('shareWhatsApp').onclick = () => {
+            const title = document.getElementById('displayMenuTitle').textContent;
+            const total = document.getElementById('totalPrice').textContent;
+            const message = `Liste de Courses: ${title}\n${products.map(p => `${p.name} (${p.category}) - ${p.price.toFixed(2)} x ${p.quantity} ${p.unitemesure}`).join('\n')}\nTotal: ${total} €`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+        };
+        </script>
+          <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        </body>
+</html> 
+        
